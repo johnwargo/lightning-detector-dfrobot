@@ -15,7 +15,7 @@
 #include "LiquidCrystal_I2C.h"
 LiquidCrystal_I2C lcd(0x20, 16, 2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
 
-volatile int8_t AS3935IsrTrig = 0;
+// volatile int8_t AS3935IsrTrig = 0;
 
 // #if defined(ESP32) || defined(ESP8266)
 // #define IRQ_PIN 0
@@ -44,6 +44,11 @@ volatile int8_t AS3935IsrTrig = 0;
 void AS3935_ISR();
 
 DFRobot_AS3935_I2C lightning0((uint8_t)IRQ_PIN, (uint8_t)AS3935_I2C_ADDR);
+
+// internal variables and constants
+#define lightningInterval 300000  // 5 minutes before clearing the display
+
+unsigned long lastLightning;
 
 void setup() {
   Serial.begin(115200);
@@ -81,39 +86,59 @@ void setup() {
   lcd.clear();
   lcd.home();
   lcd.print("Init complete");
+
+  // Initialize this to zero meaning no lightning
+  lastLightning = 0;
 }
 
 void loop() {
-  // It does nothing until an interrupt is detected on the IRQ pin.
-  while (AS3935IsrTrig == 0) { delay(1); }
-  delay(5);
-
-  // Reset interrupt flag
-  AS3935IsrTrig = 0;
-
-  // Get interrupt source
-  uint8_t intSrc = lightning0.getInterruptSrc();
-  if (intSrc == 1) {
-    // Get rid of non-distance data
-    uint8_t lightningDistKm = lightning0.getLightningDistKm();
-    Serial.println("Lightning detected");
-    Serial.print("Distance: ");
-    Serial.print(lightningDistKm);
-    Serial.println(" km");
-
-    // Get lightning energy intensity
-    uint32_t lightningEnergyVal = lightning0.getStrikeEnergyRaw();
-    Serial.print("Intensity: ");
-    Serial.print(lightningEnergyVal);
-    Serial.println("");
-  } else if (intSrc == 2) {
-    Serial.println("Disturbance detected");
-  } else if (intSrc == 3) {
-    Serial.println("Noise level too high!");
+  // have we had lightning in the last lightningInterval milliseconds?
+  if (lastLightning > 0) {
+    // then we're in the lightning counter period
+    if ((millis() - lastLightning) > lightningInterval) {
+      // reset the lightning timer to zero (no lightning)
+      lastLightning = 0;
+      lcd.clear();
+      lcd.home();
+      lcd.print("Waiting...");
+    }
   }
+  delay(25);
 }
 
 //IRQ handler for AS3935 interrupts
 void lightningTrigger() {
-  AS3935IsrTrig = 1;
+  uint8_t intSrc;
+  uint8_t lightningDistKm;
+  uint32_t lightningEnergyVal;
+  String line1; // content for display line 1
+  String line2; // content for display line 2
+
+  // set the last lightning time to now
+  lastLightning = millis();
+  // empty out line two just in case we don't need it
+  line2 = "";
+  // Get interrupt source
+  intSrc = lightning0.getInterruptSrc();
+  if (intSrc == 1) {
+    // Get rid of non-distance data
+    lightningDistKm = lightning0.getLightningDistKm();
+    // Get lightning energy intensity
+    lightningEnergyVal = lightning0.getStrikeEnergyRaw();
+    line1 = "Lightning: " + String(lightningDistKm) + "km";
+    line2 = "Intensity: " + String(lightningEnergyVal);
+  } else if (intSrc == 2) {
+    line1 = "Disturbance detected";
+  } else if (intSrc == 3) {
+    line1 = "Noise level too high!";
+  }
+  // update the console
+  Serial.println(line1);
+  Serial.println(line2);
+  // update the display
+  lcd.clear();
+  lcd.home();
+  lcd.print(line1);
+  lcd.setCursor(0, 1);
+  lcd.print(line2);
 }
