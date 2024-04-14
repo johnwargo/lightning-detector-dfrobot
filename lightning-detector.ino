@@ -9,19 +9,11 @@
 // Lightning board
 // https://github.com/DFRobot/DFRobot_AS3935
 
-#include "DFRobot_AS3935_I2C.h"
-
 #include <Wire.h>
 #include "LiquidCrystal_I2C.h"
+#include "DFRobot_AS3935_I2C.h"
+
 LiquidCrystal_I2C lcd(0x20, 16, 2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
-
-// volatile int8_t AS3935IsrTrig = 0;
-
-// #if defined(ESP32) || defined(ESP8266)
-// #define IRQ_PIN 0
-// #else
-// #define IRQ_PIN 2
-// #endif
 
 #define IRQ_PIN 27
 
@@ -40,8 +32,6 @@ LiquidCrystal_I2C lcd(0x20, 16, 2);  // set the LCD address to 0x20 for a 16 cha
 
 // I2C address
 #define AS3935_I2C_ADDR AS3935_ADD3
-
-void AS3935_ISR();
 
 DFRobot_AS3935_I2C lightning0((uint8_t)IRQ_PIN, (uint8_t)AS3935_I2C_ADDR);
 
@@ -71,7 +61,6 @@ void setup() {
     Serial.print(".");
   }
   lightning0.defInit();
-
 
 #if defined(ESP32) || defined(ESP8266)
   attachInterrupt(digitalPinToInterrupt(IRQ_PIN), lightningTrigger, RISING);
