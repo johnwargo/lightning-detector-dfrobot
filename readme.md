@@ -12,7 +12,9 @@ LCD
 
 https://www.dfrobot.com/product-135.html
 
-https://wiki.dfrobot.com/I2C_TWI_LCD1602_Module__Gadgeteer_Compatible___SKU__DFR0063_
+[Wiki](https://wiki.dfrobot.com/I2C_TWI_LCD1602_Module__Gadgeteer_Compatible___SKU__DFR0063_)
+
+
 
 Lightning Sensor
 

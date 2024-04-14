@@ -6,6 +6,9 @@
 
 // https://wiki.dfrobot.com/Gravity%3A%20Lightning%20Sensor%20SKU%3A%20SEN0290
 
+// Lightning board
+// https://github.com/DFRobot/DFRobot_AS3935
+
 #include "DFRobot_AS3935_I2C.h"
 
 #include <Wire.h>
@@ -41,12 +44,12 @@ void AS3935_ISR();
 DFRobot_AS3935_I2C lightning0((uint8_t)IRQ_PIN, (uint8_t)AS3935_I2C_ADDR);
 
 void setup() {
-
   Serial.begin(115200);
   delay(2000);
   Serial.println();
-  Serial.println("Lightning Sensor");
+  Serial.println("Lightning Detector");
   Serial.println("By John M. Wargo");
+  Serial.println();
 
   Serial.println("Initializing LED Display");
   lcd.init();
@@ -62,6 +65,7 @@ void setup() {
   }
   lightning0.defInit();
 
+
 #if defined(ESP32) || defined(ESP8266)
   attachInterrupt(digitalPinToInterrupt(IRQ_PIN), AS3935_ISR, RISING);
 #else
@@ -71,6 +75,10 @@ void setup() {
   // Configure sensor
   lightning0.manualCal(AS3935_CAPACITANCE, AS3935_MODE, AS3935_DIST);
   // Enable interrupt (connect IRQ pin IRQ_PIN: 2, default)
+
+  lcd.clear();
+  lcd.home();
+  lcd.print("Init complete");
 }
 
 void loop() {
@@ -86,7 +94,7 @@ void loop() {
   if (intSrc == 1) {
     // Get rid of non-distance data
     uint8_t lightningDistKm = lightning0.getLightningDistKm();
-    Serial.println("Lightning dected!");
+    Serial.println("Lightning detected");
     Serial.print("Distance: ");
     Serial.print(lightningDistKm);
     Serial.println(" km");
@@ -97,7 +105,7 @@ void loop() {
     Serial.print(lightningEnergyVal);
     Serial.println("");
   } else if (intSrc == 2) {
-    Serial.println("Disturber discovered!");
+    Serial.println("Disturbance detected");
   } else if (intSrc == 3) {
     Serial.println("Noise level too high!");
   }
