@@ -38,6 +38,7 @@ DFRobot_AS3935_I2C lightning0((uint8_t)IRQ_PIN, (uint8_t)AS3935_I2C_ADDR);
 // internal variables and constants
 #define lightningInterval 300000  // 5 minutes before clearing the display
 
+String waitStr = "Waiting...";
 unsigned long lastLightning;
 
 void setup() {
@@ -71,11 +72,9 @@ void setup() {
   // Configure sensor
   lightning0.manualCal(AS3935_CAPACITANCE, AS3935_MODE, AS3935_DIST);
   // Enable interrupt (connect IRQ pin IRQ_PIN: 2, default)
-
   lcd.clear();
   lcd.home();
-  lcd.print("Init complete");
-
+  lcd.print(waitStr);  
   // Initialize this to zero meaning no lightning
   lastLightning = 0;
 }
@@ -83,16 +82,16 @@ void setup() {
 void loop() {
   // have we had lightning in the last lightningInterval milliseconds?
   if (lastLightning > 0) {
-    // then we're in the lightning counter period
+    // yes, how long has it been?
     if ((millis() - lastLightning) > lightningInterval) {
       // reset the lightning timer to zero (no lightning)
       lastLightning = 0;
       lcd.clear();
       lcd.home();
-      lcd.print("Waiting...");
+      lcd.print(waitStr);
     }
   }
-  delay(25);
+  delay(100);
 }
 
 void lightningTrigger() {
