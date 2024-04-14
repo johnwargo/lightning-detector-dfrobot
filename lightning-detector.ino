@@ -106,13 +106,15 @@ void loop() {
   delay(25);
 }
 
-//IRQ handler for AS3935 interrupts
 void lightningTrigger() {
+  //IRQ handler for AS3935 interrupts
   uint8_t intSrc;
   uint8_t lightningDistKm;
   uint32_t lightningEnergyVal;
-  String line1; // content for display line 1
-  String line2; // content for display line 2
+  String line1;  // content for display line 1
+  String line2;  // content for display line 2
+
+  Serial.println("Triggered");
 
   // set the last lightning time to now
   lastLightning = millis();
