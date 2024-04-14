@@ -71,7 +71,7 @@ void setup() {
 #if defined(ESP32) || defined(ESP8266)
   attachInterrupt(digitalPinToInterrupt(IRQ_PIN), lightningTrigger, RISING);
 #else
-  attachInterrupt(/*Interrupt No*/ 0, AS3935_ISR, RISING);
+  attachInterrupt(/*Interrupt No*/ 0, lightningTrigger, RISING);
 #endif
 
   // Configure sensor
