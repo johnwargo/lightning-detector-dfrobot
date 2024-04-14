@@ -84,13 +84,15 @@ void loop() {
   if (lastLightning > 0) {
     // yes, how long has it been?
     if ((millis() - lastLightning) > lightningInterval) {
-      // reset the lightning timer to zero (no lightning)
+      // counter expired, reset the lightning timer to zero 
       lastLightning = 0;
+      // clear the display of the last lightning message
       lcd.clear();
       lcd.home();
       lcd.print(waitStr);
     }
   }
+  // do a little wait here so the ESP32 has time to do housekeeping chores
   delay(100);
 }
 
