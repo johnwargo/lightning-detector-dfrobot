@@ -17,11 +17,13 @@ LiquidCrystal_I2C lcd(0x20, 16, 2);  // set the LCD address to 0x20 for a 16 cha
 
 volatile int8_t AS3935IsrTrig = 0;
 
-#if defined(ESP32) || defined(ESP8266)
-#define IRQ_PIN 0
-#else
-#define IRQ_PIN 2
-#endif
+// #if defined(ESP32) || defined(ESP8266)
+// #define IRQ_PIN 0
+// #else
+// #define IRQ_PIN 2
+// #endif
+
+#define IRQ_PIN 27
 
 // Antenna tuning capcitance (must be integer multiple of 8, 8 - 120 pf)
 #define AS3935_CAPACITANCE 96
@@ -67,7 +69,7 @@ void setup() {
 
 
 #if defined(ESP32) || defined(ESP8266)
-  attachInterrupt(digitalPinToInterrupt(IRQ_PIN), AS3935_ISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(IRQ_PIN), lightningTrigger, RISING);
 #else
   attachInterrupt(/*Interrupt No*/ 0, AS3935_ISR, RISING);
 #endif
@@ -112,6 +114,6 @@ void loop() {
 }
 
 //IRQ handler for AS3935 interrupts
-void AS3935_ISR() {
+void lightningTrigger() {
   AS3935IsrTrig = 1;
 }
