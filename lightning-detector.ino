@@ -39,15 +39,21 @@ DFRobot_AS3935_I2C lightning0((uint8_t)IRQ_PIN, (uint8_t)AS3935_I2C_ADDR);
 #define lightningInterval 300000  // 5 minutes before clearing the display
 
 String waitStr = "Waiting...";
+String dashes = "==================";
+
+volatile bool IRQ_EVENT = false;
 unsigned long lastLightning;
+int counter = 0;
+int counterLimit = 50;
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
   Serial.println();
+  Serial.println(dashes);
   Serial.println("Lightning Detector");
   Serial.println("By John M. Wargo");
-  Serial.println();
+  Serial.println(dashes);
 
   Serial.println("Initializing LED Display");
   lcd.init();
@@ -61,7 +67,9 @@ void setup() {
   while (lightning0.begin() != 0) {
     Serial.print(".");
   }
+
   lightning0.defInit();
+  // if (lightning0.defInit() != 0) Serial.println("Reset failed");
 
 #if defined(ESP32) || defined(ESP8266)
   attachInterrupt(digitalPinToInterrupt(IRQ_PIN), lightningTrigger, RISING);
@@ -74,56 +82,65 @@ void setup() {
   // Enable interrupt (connect IRQ pin IRQ_PIN: 2, default)
   lcd.clear();
   lcd.home();
-  lcd.print(waitStr);  
+  lcd.print(waitStr);
   // Initialize this to zero meaning no lightning
   lastLightning = 0;
 }
 
 void loop() {
-  // have we had lightning in the last lightningInterval milliseconds?
-  if (lastLightning > 0) {
-    // yes, how long has it been?
-    if ((millis() - lastLightning) > lightningInterval) {
-      // counter expired, reset the lightning timer to zero 
-      lastLightning = 0;
-      // clear the display of the last lightning message
-      lcd.clear();
-      lcd.home();
-      lcd.print(waitStr);
-    }
+  if (IRQ_EVENT) {
+    IRQ_EVENT = false;
+    Serial.println("\nTriggered");
+    updateDisplay();
   }
+  checkDisplay();
+
+  // Serial.print(".");
+  // counter += 1;
+  // if (counter > counterLimit) {
+  //   counter = 0;
+  //   Serial.println();
+  // }
   // do a little wait here so the ESP32 has time to do housekeeping chores
   delay(100);
 }
 
 void lightningTrigger() {
-  //IRQ handler for AS3935 interrupts
+  IRQ_EVENT = true;
+}
+
+void updateDisplay() {
   uint8_t intSrc;
   uint8_t lightningDistKm;
   uint32_t lightningEnergyVal;
   String line1;  // content for display line 1
   String line2;  // content for display line 2
 
-  Serial.println("Triggered");
-
   // set the last lightning time to now
   lastLightning = millis();
-  // empty out line two just in case we don't need it
-  line2 = "";
+  // empty out the text line
+  line2 = "<empty>";
   // Get interrupt source
   intSrc = lightning0.getInterruptSrc();
-  if (intSrc == 1) {
-    // Get rid of non-distance data
-    lightningDistKm = lightning0.getLightningDistKm();
-    // Get lightning energy intensity
-    lightningEnergyVal = lightning0.getStrikeEnergyRaw();
-    line1 = "Lightning: " + String(lightningDistKm) + "km";
-    line2 = "Intensity: " + String(lightningEnergyVal);
-  } else if (intSrc == 2) {
-    line1 = "Disturbance detected";
-  } else if (intSrc == 3) {
-    line1 = "Noise level too high!";
+  Serial.println(String(intSrc));
+  switch (intSrc) {
+    case 1:
+      lightningDistKm = lightning0.getLightningDistKm();
+      line1 = "Lightning: " + String(lightningDistKm) + "km";
+      lightningEnergyVal = lightning0.getStrikeEnergyRaw();
+      line2 = "Intensity: " + String(lightningEnergyVal);
+      break;
+    case 2:
+      line1 = "Disturbance detected";
+      break;
+    case 3:
+      line1 = "Noise level too high!";
+      break;
+    default:
+      line1 = "<UNKNOWN>";
+      break;
   }
+
   // update the console
   Serial.println(line1);
   Serial.println(line2);
@@ -133,4 +150,19 @@ void lightningTrigger() {
   lcd.print(line1);
   lcd.setCursor(0, 1);
   lcd.print(line2);
+}
+
+void checkDisplay() {
+  // have we had lightning in the last lightningInterval milliseconds?
+  if (lastLightning > 0) {
+    // yes, how long has it been?
+    if ((millis() - lastLightning) > lightningInterval) {
+      // counter expired, reset the lightning timer to zero
+      lastLightning = 0;
+      // clear the display of the last lightning message
+      lcd.clear();
+      lcd.home();
+      lcd.print(waitStr);
+    }
+  }
 }
