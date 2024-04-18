@@ -46,6 +46,11 @@ unsigned long lastLightning;
 int counter = 0;
 int counterLimit = 50;
 
+// https://lastminuteengineers.com/handling-esp32-gpio-interrupts-tutorial/
+void IRAM_ATTR isr() {
+  IRQ_EVENT = true;
+}
+
 void setup() {
   Serial.begin(115200);
   delay(2000);
@@ -72,9 +77,9 @@ void setup() {
   // if (lightning0.defInit() != 0) Serial.println("Reset failed");
 
 #if defined(ESP32) || defined(ESP8266)
-  attachInterrupt(digitalPinToInterrupt(IRQ_PIN), lightningTrigger, RISING);
+  attachInterrupt(digitalPinToInterrupt(IRQ_PIN), isr, RISING);
 #else
-  attachInterrupt(/*Interrupt No*/ 0, lightningTrigger, RISING);
+  attachInterrupt(/*Interrupt No*/ 0, isr, RISING);
 #endif
 
   // Configure sensor
@@ -85,6 +90,9 @@ void setup() {
   lcd.print(waitStr);
   // Initialize this to zero meaning no lightning
   lastLightning = 0;
+
+  // display interrupts
+  // esp_intr_dump();
 }
 
 void loop() {
@@ -103,10 +111,6 @@ void loop() {
   // }
   // do a little wait here so the ESP32 has time to do housekeeping chores
   delay(100);
-}
-
-void lightningTrigger() {
-  IRQ_EVENT = true;
 }
 
 void updateDisplay() {
@@ -166,3 +170,4 @@ void checkDisplay() {
     }
   }
 }
+
