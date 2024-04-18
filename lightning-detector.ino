@@ -3,11 +3,11 @@
 * By John M. Wargo
 * https://johnwargo.com
 ********************************************************************/
-
+// References: 
 // https://wiki.dfrobot.com/Gravity%3A%20Lightning%20Sensor%20SKU%3A%20SEN0290
-
-// Lightning board
 // https://github.com/DFRobot/DFRobot_AS3935
+// https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/intr_alloc.html
+// https://lastminuteengineers.com/handling-esp32-gpio-interrupts-tutorial/
 
 #include <Wire.h>
 #include "LiquidCrystal_I2C.h"
