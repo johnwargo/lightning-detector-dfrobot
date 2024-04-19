@@ -3,7 +3,7 @@
 * By John M. Wargo
 * https://johnwargo.com
 ********************************************************************/
-// References: 
+// References:
 // https://wiki.dfrobot.com/Gravity%3A%20Lightning%20Sensor%20SKU%3A%20SEN0290
 // https://github.com/DFRobot/DFRobot_AS3935
 // https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/intr_alloc.html
@@ -36,10 +36,11 @@ LiquidCrystal_I2C lcd(0x20, 16, 2);  // set the LCD address to 0x20 for a 16 cha
 DFRobot_AS3935_I2C lightning0((uint8_t)IRQ_PIN, (uint8_t)AS3935_I2C_ADDR);
 
 // internal variables and constants
-#define lightningInterval 300000  // 5 minutes before clearing the display
+// #define lightningInterval 300000  // 5 minutes before clearing the display
+#define lightningInterval 60000  // 1 minute before clearing the display
 
 String waitStr = "Waiting...";
-String dashes = "==================";
+String dashes = "======================";
 
 volatile bool IRQ_EVENT = false;
 unsigned long lastLightning;
@@ -56,8 +57,8 @@ void setup() {
   delay(2000);
   Serial.println();
   Serial.println(dashes);
-  Serial.println("Lightning Detector");
-  Serial.println("By John M. Wargo");
+  Serial.println("| Lightning Detector |");
+  Serial.println("| By John M. Wargo   |");
   Serial.println(dashes);
 
   Serial.println("Initializing LED Display");
@@ -90,9 +91,6 @@ void setup() {
   lcd.print(waitStr);
   // Initialize this to zero meaning no lightning
   lastLightning = 0;
-
-  // display interrupts
-  // esp_intr_dump();
 }
 
 void loop() {
@@ -126,7 +124,7 @@ void updateDisplay() {
   line2 = "<empty>";
   // Get interrupt source
   intSrc = lightning0.getInterruptSrc();
-  Serial.println(String(intSrc));
+  // Serial.println(String(intSrc));
   switch (intSrc) {
     case 1:
       lightningDistKm = lightning0.getLightningDistKm();
@@ -145,15 +143,17 @@ void updateDisplay() {
       break;
   }
 
+  // lightning0.printAllRegs();
+
   // update the console
   Serial.println(line1);
   Serial.println(line2);
   // update the display
   lcd.clear();
-  lcd.home();
   lcd.print(line1);
   lcd.setCursor(0, 1);
   lcd.print(line2);
+  lcd.home();
 }
 
 void checkDisplay() {
@@ -170,4 +170,3 @@ void checkDisplay() {
     }
   }
 }
-
