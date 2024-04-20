@@ -91,6 +91,8 @@ void setup() {
   lcd.print(waitStr);
   // Initialize this to zero meaning no lightning
   lastLightning = 0;
+
+  // esp_intr_dump();
 }
 
 void loop() {
